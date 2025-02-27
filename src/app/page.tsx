@@ -9,6 +9,8 @@ import { delay } from '@/lib/utils'
 import { getWixClient } from '@/lib/wix-client.base'
 import Product from '@/components/Products'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getCollectionsBySlug } from '@/wix-api/collections'
+import { queryProducts } from '@/wix-api/products'
 
 export default function Home() {
   return (
@@ -50,18 +52,15 @@ async function FeaturedProducts() {
 
   const wixClient = getWixClient()
 
-  const { collection } =
-    await wixClient.collections.getCollectionBySlug('featured-products')
+  const collection = await getCollectionsBySlug('featured-products')
 
   if (!collection?._id) {
     return null
   }
 
-  const featuredProducts = await wixClient.products
-    .queryProducts()
-    .hasSome('collectionIds', [collection._id])
-    .descending('lastUpdated')
-    .find()
+  const featuredProducts = await queryProducts({
+    collectionIds: collection._id
+  })
 
   if (!featuredProducts.items.length) {
     return null
@@ -75,7 +74,6 @@ async function FeaturedProducts() {
           <Product key={product._id} product={product} />
         ))}
       </div>
-      <pre>{JSON.stringify(featuredProducts, null, 2)}</pre>
     </div>
   )
 }
